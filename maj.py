@@ -4,6 +4,13 @@ from transformers import T5ForConditionalGeneration,T5Tokenizer
 import random
 import numpy as np
 import nltk
+# import nltk
+from nltk.tokenize import word_tokenize
+from nltk.tag import pos_tag
+from nltk.corpus import stopwords
+# import nltk
+nltk.download('averaged_perceptron_tagger')
+import string
 nltk.download('punkt')
 nltk.download('brown')
 nltk.download('wordnet')
@@ -16,25 +23,25 @@ import pke
 import traceback
 from flashtext import KeywordProcessor
 # data=pd.read_csv("OS_dataset - Dataset.csv")
-      
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# import spacy
+# nlp=spacy.load("en_core_web_sm")      
+# import en_core_web_sm
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class maj:
-  def search_word(self,sentence, word):
-      sentence_lower = sentence.lower()
-      word_lower = word.lower()
-      if word_lower in sentence_lower:
-          return True
-      else:
-          return False
+  # def search_word(self,sentence, word):
+  #     sentence_lower = sentence.lower()
+  #     word_lower = word.lower()
+  #     if word_lower in sentence_lower:
+  #         return True
+  #     else:
+  #         return False
 
   def set_seed(self,seed: int):
       random.seed(seed)
       np.random.seed(seed)
       torch.manual_seed(seed)
       torch.cuda.manual_seed_all(seed)
-  # self.set_seed(42)
 
   def postprocesstext(self,content):
     final=""
@@ -42,16 +49,17 @@ class maj:
       sent = sent.capitalize()
       final = final +" "+sent
     return final
+  
   summary_model = T5ForConditionalGeneration.from_pretrained('t5-base')
   summary_tokenizer = T5Tokenizer.from_pretrained('t5-base')
-  summary_model = summary_model.to(device)
+  # summary_model = summary_model.to(device)
   
   def summarizer(self,text,model,tokenizer):
     text = text.strip().replace("\n"," ")
     text = "summarize: "+text
     # print (text)
     max_len = 512
-    encoding = tokenizer.encode_plus(text,max_length=max_len, pad_to_max_length=False,truncation=True, return_tensors="pt").to(device)
+    encoding = tokenizer.encode_plus(text,max_length=max_len, pad_to_max_length=False,truncation=True, return_tensors="pt")
 
     input_ids, attention_mask = encoding["input_ids"], encoding["attention_mask"]
 
@@ -69,79 +77,45 @@ class maj:
     summary = dec[0]
     summary = self.postprocesstext(summary)
     summary= summary.strip()
-
     return summary
-
-
-  # summarized_text = summarizer(text,summary_model,summary_tokenizer)
-
-  """# **Answer Span Extraction (Keywords and Noun Phrases)**"""
-  def get_nouns_multipartite(self,content):
-      out=[]
-      try:
-          extractor = pke.unsupervised.MultipartiteRank()
-          extractor.load_document(input=content,language='en')
-          #    not contain punctuation marks or stopwords as candidates.
-          pos = {'PROPN','NOUN'}
-          #pos = {'PROPN','NOUN'}
-          stoplist = list(string.punctuation)
-          stoplist += ['-lrb-', '-rrb-', '-lcb-', '-rcb-', '-lsb-', '-rsb-']
-          stoplist += stopwords.words('english')
-          # extractor.candidate_selection(pos=pos, stoplist=stoplist)
-          extractor.candidate_selection(pos=pos)
-          # 4. build the Multipartite graph and rank candidates using random walk,
-          #    alpha controls the weight adjustment mechanism, see TopicRank for
-          #    threshold/method parameters.
-          extractor.candidate_weighting(alpha=1.1,
-                                        threshold=0.75,
-                                        method='average')
-          keyphrases = extractor.get_n_best(n=15)
-
-
-          for val in keyphrases:
-              out.append(val[0])
-      except:
-          out = []
-          traceback.print_exc()
-
-      return out
-
-
-
-  def get_keywords(self,originaltext,summarytext):
-    keywords = self.get_nouns_multipartite(originaltext)
-    print ("keywords unsummarized: ",keywords)
-    keyword_processor = KeywordProcessor()
-    for keyword in keywords:
-      keyword_processor.add_keyword(keyword)
-
-    keywords_found = keyword_processor.extract_keywords(summarytext)
-    keywords_found = list(set(keywords_found))
-    print ("keywords_found in summarized: ",keywords_found)
-
-    important_keywords =[]
-    for keyword in keywords:
-      if keyword in keywords_found:
-        important_keywords.append(keyword)
-
-    return important_keywords[:4]
-
+  
+  
+  # def get_nouns_from_text(self,text):
+  #   # Tokenize the text into words
+  #   words = word_tokenize(text)
+    
+  #   # Tag the words with their part-of-speech (POS)
+  #   tagged_words = pos_tag(words)
+    
+  #   # Define a list of allowed POS tags for nouns
+  #   allowed_tags = ['NN', 'NNS', 'NNP', 'NNPS']
+    
+  #   # Filter out nouns based on their POS tags
+  #   nouns = [word for word, tag in tagged_words if tag in allowed_tags]
+    
+  #   # Remove stopwords and punctuation
+  #   stop_words = set(stopwords.words('english'))
+  #   punctuation = set(string.punctuation)
+    
+  #   cleaned_nouns = [word for word in nouns if word.lower() not in stop_words and word not in punctuation]
+    
+  #   return cleaned_nouns
 
   # imp_keywords = get_keywords(text,summarized_text)
   # print (imp_keywords)
 
-  """# **Question generation with T5**"""
   def m(self):
     question_model = T5ForConditionalGeneration.from_pretrained('Koundinya-Atchyutuni/t5-end2end-questions-generation')
-    question_model = question_model.to(device)
+    # question_model = question_model.to(device)
     return question_model
+  
   def l(self):
     question_tokenizer = T5Tokenizer.from_pretrained('Koundinya-Atchyutuni/t5-end2end-questions-generation')
     return question_tokenizer
 
   def get_question(self,context,answer,model,tokenizer):
     text = "context: {} answer: {}".format(context,answer)
-    encoding = tokenizer.encode_plus(text,max_length=384, pad_to_max_length=False,truncation=True, return_tensors="pt").to(device)
+    encoding = tokenizer.encode_plus(text,max_length=384, pad_to_max_length=False,truncation=True, return_tensors="pt")
     input_ids, attention_mask = encoding["input_ids"], encoding["attention_mask"]
     outs = model.generate(input_ids=input_ids,
                                     attention_mask=attention_mask,
