@@ -8,7 +8,7 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk.tag import pos_tag
 from nltk.corpus import stopwords
-# import nltk
+# import nltk   
 nltk.download('averaged_perceptron_tagger')
 import string
 nltk.download('punkt')
@@ -22,20 +22,10 @@ import string
 import pke
 import traceback
 from flashtext import KeywordProcessor
-# data=pd.read_csv("OS_dataset - Dataset.csv")
-# import spacy
-# nlp=spacy.load("en_core_web_sm")      
-# import en_core_web_sm
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 class maj:
-  # def search_word(self,sentence, word):
-  #     sentence_lower = sentence.lower()
-  #     word_lower = word.lower()
-  #     if word_lower in sentence_lower:
-  #         return True
-  #     else:
-  #         return False
+
 
   def set_seed(self,seed: int):
       random.seed(seed)
@@ -52,12 +42,12 @@ class maj:
   
   summary_model = T5ForConditionalGeneration.from_pretrained('t5-base')
   summary_tokenizer = T5Tokenizer.from_pretrained('t5-base')
-  # summary_model = summary_model.to(device)
+
   
   def summarizer(self,text,model,tokenizer):
     text = text.strip().replace("\n"," ")
     text = "summarize: "+text
-    # print (text)
+   
     max_len = 512
     encoding = tokenizer.encode_plus(text,max_length=max_len, pad_to_max_length=False,truncation=True, return_tensors="pt")
 
@@ -80,33 +70,11 @@ class maj:
     return summary
   
   
-  # def get_nouns_from_text(self,text):
-  #   # Tokenize the text into words
-  #   words = word_tokenize(text)
-    
-  #   # Tag the words with their part-of-speech (POS)
-  #   tagged_words = pos_tag(words)
-    
-  #   # Define a list of allowed POS tags for nouns
-  #   allowed_tags = ['NN', 'NNS', 'NNP', 'NNPS']
-    
-  #   # Filter out nouns based on their POS tags
-  #   nouns = [word for word, tag in tagged_words if tag in allowed_tags]
-    
-  #   # Remove stopwords and punctuation
-  #   stop_words = set(stopwords.words('english'))
-  #   punctuation = set(string.punctuation)
-    
-  #   cleaned_nouns = [word for word in nouns if word.lower() not in stop_words and word not in punctuation]
-    
-  #   return cleaned_nouns
-
-  # imp_keywords = get_keywords(text,summarized_text)
-  # print (imp_keywords)
+  
 
   def m(self):
     question_model = T5ForConditionalGeneration.from_pretrained('Koundinya-Atchyutuni/t5-end2end-questions-generation')
-    # question_model = question_model.to(device)
+    
     return question_model
   
   def l(self):
